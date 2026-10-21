@@ -14,26 +14,50 @@ pipeline {
 
     stage('Install') {
       steps {
-        dir('frontend') { sh 'npm install' }
-        dir('backend')  { sh 'npm install' }
+        dir('frontend') {
+          script {
+            if (isUnix()) { sh 'npm install' } else { bat 'npm install' }
+          }
+        }
+        dir('backend') {
+          script {
+            if (isUnix()) { sh 'npm install' } else { bat 'npm install' }
+          }
+        }
       }
     }
 
     stage('Test') {
       steps {
-        dir('frontend') { sh 'npm test' }
+        dir('frontend') {
+          script {
+            if (isUnix()) { sh 'npm test' } else { bat 'npm test' }
+          }
+        }
       }
     }
 
     stage('Build Frontend') {
       steps {
-        sh 'docker build -t $FRONT_IMG:latest -t $FRONT_IMG:$BUILD_NUMBER ./frontend'
+        script {
+          if (isUnix()) {
+            sh 'docker build -t $FRONT_IMG:latest -t $FRONT_IMG:$BUILD_NUMBER ./frontend'
+          } else {
+            bat "docker build -t %FRONT_IMG%:latest -t %FRONT_IMG%:%BUILD_NUMBER% ./frontend"
+          }
+        }
       }
     }
 
     stage('Build Backend') {
       steps {
-        sh 'docker build -t $BACK_IMG:latest -t $BACK_IMG:$BUILD_NUMBER ./backend'
+        script {
+          if (isUnix()) {
+            sh 'docker build -t $BACK_IMG:latest -t $BACK_IMG:$BUILD_NUMBER ./backend'
+          } else {
+            bat "docker build -t %BACK_IMG%:latest -t %BACK_IMG%:%BUILD_NUMBER% ./backend"
+          }
+        }
       }
     }
 
@@ -42,9 +66,17 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
                                           usernameVariable: 'DH_USER',
                                           passwordVariable: 'DH_PASS')]) {
-          sh 'echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin'
-          sh 'docker push $FRONT_IMG:latest'
-          sh 'docker push $FRONT_IMG:$BUILD_NUMBER'
+          script {
+            if (isUnix()) {
+              sh 'echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin'
+              sh 'docker push $FRONT_IMG:latest'
+              sh 'docker push $FRONT_IMG:$BUILD_NUMBER'
+            } else {
+              bat 'echo %DH_PASS% | docker login -u %DH_USER% --password-stdin'
+              bat "docker push %FRONT_IMG%:latest"
+              bat "docker push %FRONT_IMG%:%BUILD_NUMBER%"
+            }
+          }
         }
       }
     }
@@ -54,15 +86,31 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
                                           usernameVariable: 'DH_USER',
                                           passwordVariable: 'DH_PASS')]) {
-          sh 'echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin'
-          sh 'docker push $BACK_IMG:latest'
-          sh 'docker push $BACK_IMG:$BUILD_NUMBER'
+          script {
+            if (isUnix()) {
+              sh 'echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin'
+              sh 'docker push $BACK_IMG:latest'
+              sh 'docker push $BACK_IMG:$BUILD_NUMBER'
+            } else {
+              bat 'echo %DH_PASS% | docker login -u %DH_USER% --password-stdin'
+              bat "docker push %BACK_IMG%:latest"
+              bat "docker push %BACK_IMG%:%BUILD_NUMBER%"
+            }
+          }
         }
       }
     }
   }
 
   post {
-    always { sh 'docker logout || true' }
+    always {
+      script {
+        if (isUnix()) {
+          sh 'docker logout || true'
+        } else {
+          bat 'docker logout || ver > nul'
+        }
+      }
+    }
   }
 }
