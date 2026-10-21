@@ -1,0 +1,6 @@
+---
+- name: Provision the Garderie VM with Docker
+  hosts: all
+  become: yes
+  roles:
+    - docker
