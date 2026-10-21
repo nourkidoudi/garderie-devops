@@ -2,8 +2,7 @@ pipeline {
   agent any
 
   environment {
-    // À REMPLACER par votre identifiant Docker Hub
-    DOCKERHUB_USER = 'votre_utilisateur_dockerhub'
+    DOCKERHUB_USER = 'nourki2003'
     FRONT_IMG = "${DOCKERHUB_USER}/garderie-frontend"
     BACK_IMG  = "${DOCKERHUB_USER}/garderie-backend"
   }
@@ -20,7 +19,6 @@ pipeline {
       }
     }
 
-    // Si le test échoue (code retour ≠ 0), le pipeline s'arrête : les étapes suivantes ne s'exécutent pas
     stage('Test') {
       steps {
         dir('frontend') { sh 'npm test' }
