@@ -1,11 +1,26 @@
-FROM node:20-alpine
+# ============ Stage 1: dependencies ============
+FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+
+# ============ Stage 2: build ============
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Adresse du backend dans le réseau Docker Compose (nom du service)
 ARG BACKEND_URL=http://backend:5000
 ENV BACKEND_URL=$BACKEND_URL
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
+
+# ============ Stage 3: runtime (final, tiny) ============
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
