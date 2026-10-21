@@ -26,7 +26,7 @@ cd frontend && npm test
 
 ## Pipeline Jenkins
 
-1. Credentials : *Username with password*, ID `dockerhub-creds` (utilisateur + jeton Docker Hub).
+1. Credentials : *Username with password*, ID `dockerhub` (utilisateur + jeton Docker Hub).
 2. Dans `Jenkinsfile`, remplacer `votre_utilisateur_dockerhub` par votre identifiant Docker Hub.
 3. Job *Pipeline* → *Pipeline script from SCM* → Git → URL du dépôt → branche `main` → `Jenkinsfile`.
 4. Jenkins doit disposer de Node.js 20 et de Docker (l'utilisateur `jenkins` dans le groupe `docker`).
